@@ -454,9 +454,9 @@ if __name__ == "__main__":
     n_gpu = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     args.distributed = n_gpu > 1
 
-    yolo = YOLO(**{"model_path": 'keras_yolo3/yolo_weights_logos.h5',
-                   "anchors_path": 'keras_yolo3/model_data/yolo_anchors.txt',
-                   "classes_path": "data_classes.txt",
+    yolo = YOLO(**{"model_path": 'stylegan2-pytorch/logohunter/src/keras_yolo3/yolo_weights_logos.h5',
+                   "anchors_path": 'stylegan2-pytorch/logohunter/src/keras_yolo3/model_data/yolo_anchors.txt',
+                   "classes_path": "stylegan2-pytorch/logohunter/src/data_classes.txt",
                    "score": 0.001,
                    "gpu_num": n_gpu,
                    "model_image_size": (416, 416),
