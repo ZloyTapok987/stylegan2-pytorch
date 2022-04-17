@@ -243,6 +243,6 @@ if __name__ == "__main__":
 
         img_name = os.path.splitext(os.path.basename(input_name))[0] + "-project.png"
         pil_img = Image.fromarray(img_ar[i])
-        pil_img.save(img_name)
+        pil_img.save("drive/MyDrive/diploma/logomark_out/" + img_name)
 
-    torch.save(result_file, filename)
+    torch.save(result_file, "drive/MyDrive/diploma/logomark_out/" + filename)

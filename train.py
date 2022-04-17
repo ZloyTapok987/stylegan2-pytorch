@@ -11,13 +11,14 @@ from torch.utils import data
 import torch.distributed as dist
 from torchvision import transforms, utils
 from tqdm import tqdm
+from logohunter.src.keras_yolo3.yolo import YOLO
+from PIL import Image
 
 try:
     import wandb
 
 except ImportError:
     wandb = None
-
 
 from dataset import MultiResolutionDataset
 from distributed import (
@@ -78,7 +79,27 @@ def d_r1_loss(real_pred, real_img):
     return grad_penalty
 
 
-def g_nonsaturating_loss(fake_pred):
+def get_score_logo_from_arr(yolo, image_arr):
+    img = Image.fromarray(image_arr)
+    if img.mode != "RGB":
+        image = img.convert("RGB")
+    prediction, _ = yolo.detect_image(img)
+    if len(prediction) == 0:
+        return 0
+
+    return prediction[0][5]
+
+
+def g_logo_loss(yolo, fake_pred, fake_imgs, alpha=0.05):
+    loss = F.softplus(-fake_pred).mean()
+    print(loss)
+    for img in fake_imgs:
+        loss += get_score_logo_from_arr(yolo, img) * alpha
+
+    return loss
+
+
+def g_nonsaturating_loss(fake_pred, alpha=0.001):
     loss = F.softplus(-fake_pred).mean()
 
     return loss
@@ -229,8 +250,8 @@ def train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, devic
             fake_img, _ = augment(fake_img, ada_aug_p)
 
         fake_pred = discriminator(fake_img)
-        g_loss = g_nonsaturating_loss(fake_pred)
-
+        # g_loss = g_nonsaturating_loss(fake_pred)
+        g_loss = g_logo_loss(yolo, fake_pred, fake_img)
         loss_dict["g"] = g_loss
 
         generator.zero_grad()
@@ -259,7 +280,7 @@ def train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, devic
             g_optim.step()
 
             mean_path_length_avg = (
-                reduce_sum(mean_path_length).item() / get_world_size()
+                    reduce_sum(mean_path_length).item() / get_world_size()
             )
 
         loss_dict["path"] = path_loss
@@ -302,19 +323,19 @@ def train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, devic
                     }
                 )
 
-            if i % 100 == 0:
+            if i % 1000 == 0:
                 with torch.no_grad():
                     g_ema.eval()
                     sample, _ = g_ema([sample_z])
                     utils.save_image(
                         sample,
-                        f"sample/{str(i).zfill(6)}.png",
+                        f"drive/MyDrive/diploma/checkpointLOGAN/sample/{str(i).zfill(6)}.png",
                         nrow=int(args.n_sample ** 0.5),
                         normalize=True,
                         range=(-1, 1),
                     )
 
-            if i % 10000 == 0:
+            if i % 1000 == 0:
                 torch.save(
                     {
                         "g": g_module.state_dict(),
@@ -325,7 +346,7 @@ def train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, devic
                         "args": args,
                         "ada_aug_p": ada_aug_p,
                     },
-                    f"checkpoint/{str(i).zfill(6)}.pt",
+                    f"drive/MyDrive/diploma/checkpointLOGAN/checkpoint/{str(i).zfill(6)}.pt",
                 )
 
 
@@ -432,6 +453,15 @@ if __name__ == "__main__":
 
     n_gpu = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
     args.distributed = n_gpu > 1
+
+    yolo = YOLO(**{"model_path": 'keras_yolo3/yolo_weights_logos.h5',
+                   "anchors_path": 'keras_yolo3/model_data/yolo_anchors.txt',
+                   "classes_path": "data_classes.txt",
+                   "score": 0.001,
+                   "gpu_num": n_gpu,
+                   "model_image_size": (416, 416),
+                   }
+                )
 
     if args.distributed:
         torch.cuda.set_device(args.local_rank)
