@@ -457,7 +457,7 @@ if __name__ == "__main__":
     yolo = YOLO(**{"model_path": 'stylegan2-pytorch/logohunter/src/keras_yolo3/yolo_weights_logos.h5',
                    "anchors_path": 'stylegan2-pytorch/logohunter/src/keras_yolo3/model_data/yolo_anchors.txt',
                    "classes_path": "stylegan2-pytorch/logohunter/src/data_classes.txt",
-                   "score": 0.001,
+                   "score": 0.1,
                    "gpu_num": n_gpu,
                    "model_image_size": (416, 416),
                    }
