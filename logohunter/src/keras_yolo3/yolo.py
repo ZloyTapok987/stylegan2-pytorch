@@ -129,7 +129,7 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
 
-        print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
+        #print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
         out_prediction = []
 
         font_path = os.path.join(os.path.dirname(__file__),'font/FiraMono-Medium.otf')
