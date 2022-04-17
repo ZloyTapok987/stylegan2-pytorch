@@ -329,7 +329,7 @@ def train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, devic
                     sample, _ = g_ema([sample_z])
                     utils.save_image(
                         sample,
-                        f"drive/MyDrive/diploma/checkpointLOGAN/{str(i).zfill(6)}.png",
+                        f"/content/drive/MyDrive/diploma/checkpointLOGAN/{str(i).zfill(6)}.png",
                         nrow=int(args.n_sample ** 0.5),
                         normalize=True,
                         range=(-1, 1),
@@ -346,7 +346,7 @@ def train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, devic
                         "args": args,
                         "ada_aug_p": ada_aug_p,
                     },
-                    f"drive/MyDrive/diploma/sampleLOGAN/{str(i).zfill(6)}.pt",
+                    f"/content/drive/MyDrive/diploma/sampleLOGAN/{str(i).zfill(6)}.pt",
                 )
 
 
