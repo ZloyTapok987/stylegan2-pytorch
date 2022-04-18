@@ -13,7 +13,6 @@ from torchvision import transforms, utils
 from tqdm import tqdm
 from logohunter.src.keras_yolo3.yolo import YOLO
 from PIL import Image
-import tensorflow.compat.v1 as tf
 from tensorflow.python.framework.ops import disable_eager_execution
 
 disable_eager_execution()
