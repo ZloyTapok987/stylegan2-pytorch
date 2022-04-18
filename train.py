@@ -15,6 +15,7 @@ from logohunter.src.keras_yolo3.yolo import YOLO
 from PIL import Image
 import tensorflow.compat.v1 as tf
 from tensorflow.python.framework.ops import disable_eager_execution
+
 disable_eager_execution()
 
 try:
@@ -81,43 +82,44 @@ def d_r1_loss(real_pred, real_img):
 
     return grad_penalty
 
+
 def make_image(tensor):
     return (
         tensor.clone().detach()
-        .clamp_(min=-1, max=1)
-        .add(1)
-        .div_(2)
-        .mul(255)
-        .type(torch.uint8)
-        .permute(1, 2, 0)
-        .to("cpu")
-        .numpy()
+            .clamp_(min=-1, max=1)
+            .add(1)
+            .div_(2)
+            .mul(255)
+            .type(torch.uint8)
+            .permute(1, 2, 0)
+            .to("cpu")
+            .numpy()
     )
 
+
 def get_score_logo_from_arr(yolo, image_arr):
-    #arr = image_arr.cpu().detach().numpy()
-    #print(arr.shape)
+    # arr = image_arr.cpu().detach().numpy()
+    # print(arr.shape)
     img = Image.fromarray(make_image(image_arr))
     if img.mode != "RGB":
-        image = img.convert("RGB")
+        img = img.convert("RGB")
     prediction, _ = yolo.detect_image(img)
     if len(prediction) == 0:
-        return 0
+        return 1
 
-    return prediction[0][5]
+    idx = np.argmax(np.array(prediction)[:, 5])
+    prob = prediction[idx][5]
+    return 1 - prob
 
 
-def g_logo_loss(yolo, fake_pred, fake_imgs, alpha=0.05):
+def g_logo_loss(yolo, fake_pred, fake_imgs, alpha=0.2):
     loss = F.softplus(-fake_pred).mean()
-    print("LOSS")
-    print(fake_pred.size())
-    print("L1")
-    print(fake_imgs.size())
-    print("L2")
-    print(loss)
+    is_logo_loss = 0
     for img in fake_imgs:
-        loss += get_score_logo_from_arr(yolo, img) * alpha
+        is_logo_loss += get_score_logo_from_arr(yolo, img) * alpha
+    is_logo_loss /= float(len(fake_imgs))
 
+    loss = loss + is_logo_loss
     return loss
 
 
@@ -579,5 +581,5 @@ if __name__ == "__main__":
 
     if get_rank() == 0 and wandb is not None and args.wandb:
         wandb.init(project="stylegan 2")
-    #generator.compile(run_eagerly=True)
+    # generator.compile(run_eagerly=True)
     train(args, loader, generator, discriminator, g_optim, d_optim, g_ema, device)

@@ -181,7 +181,7 @@ class YOLO(object):
             del draw
 
         end = timer()
-        print('Time spent: {:.3f}sec'.format(end - start))
+       # print('Time spent: {:.3f}sec'.format(end - start))
         return out_prediction, image
 
     def close_session(self):

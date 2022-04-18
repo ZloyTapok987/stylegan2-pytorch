@@ -90,8 +90,8 @@ def match_logo(img_test, prediction, model_preproc, outtxt, input_features_cdf_c
     for idx in matches:
         bb = prediction[idx]
         label = input_labels[matches[idx][0]]
-        print('Logo #{} - {} {} - classified as {} {:.2f}'.format(idx,
-          tuple(bb[:2]), tuple(bb[2:4]), label, matches[idx][1]))
+        #print('Logo #{} - {} {} - classified as {} {:.2f}'.format(idx,
+        #  tuple(bb[:2]), tuple(bb[2:4]), label, matches[idx][1]))
 
         outtxt += ' {},{},{},{},{},{:.2f},{:.3f}'.format(*bb[:4], label,bb[-1], matches[idx][1])
     outtxt += '\n'
